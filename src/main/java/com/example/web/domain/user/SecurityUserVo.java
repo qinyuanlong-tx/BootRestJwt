@@ -1,0 +1,36 @@
+package com.example.web.domain.user;
+
+import java.util.Collection;
+import java.util.Date;
+
+import org.springframework.security.core.GrantedAuthority;
+
+public class SecurityUserVo extends org.springframework.security.core.userdetails.User {
+
+	private static final long serialVersionUID = 1L;
+	
+	private static boolean enabled = true;
+	private static boolean accountNonExpired = true;
+	private static boolean credentialsNonExpired = true;
+	private static boolean accountNonLocked = true;
+	
+	private Date lastPasswordReset;
+
+	public SecurityUserVo(String username, String password, boolean enabled, boolean accountNonExpired,
+			boolean credentialsNonExpired, boolean accountNonLocked,
+			Collection<? extends GrantedAuthority> authorities) {
+		super(username, password, enabled, accountNonExpired, credentialsNonExpired, accountNonLocked, authorities);
+	}
+
+	public SecurityUserVo(String username, String password, Collection<? extends GrantedAuthority> authorities) {
+		this(username, password, enabled, accountNonExpired, credentialsNonExpired, accountNonLocked, authorities);
+	}
+
+	public Date getLastPasswordReset() {
+		return lastPasswordReset;
+	}
+
+	public void setLastPasswordReset(Date lastPasswordReset) {
+		this.lastPasswordReset = lastPasswordReset;
+	}
+}
