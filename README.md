@@ -40,7 +40,7 @@ type="javax.sql.DataSource"
 url="jdbc:mysql://db.example.com:3306/exampledb?zeroDateTimeBehavior=convertToNull"/>      
 </GlobalNamingResources>
 
-<Context docBase="BootRestSession" path="/BootRestSession" reloadable="true">
+<Context docBase="BootRestJwt" path="/BootRestJwt" reloadable="true">
 <ResourceLink global="jdbc/sim" name="jdbc/sim" type="javax.sql.DataSource"/>
 </Context>
 ```
