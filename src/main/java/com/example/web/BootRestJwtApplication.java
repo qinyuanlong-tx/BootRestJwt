@@ -22,6 +22,7 @@ public class BootRestJwtApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(BootRestJwtApplication.class, args);
 	}
+	
 	@Bean
 	public SqlSessionFactory sqlSessionFatory(DataSource datasource) throws Exception {
 		SqlSessionFactoryBean sqlSessionFactory = new SqlSessionFactoryBean();
@@ -35,10 +36,5 @@ public class BootRestJwtApplication {
 	@Bean
 	public SqlSessionTemplate sqlSession(SqlSessionFactory sqlSessionFactory) {
 		return new SqlSessionTemplate(sqlSessionFactory);
-	}
-
-	@Bean
-	public DeviceHandlerMethodArgumentResolver deviceHandlerMethodArgumentResolver() {
-	    return new DeviceHandlerMethodArgumentResolver();
 	}
 }

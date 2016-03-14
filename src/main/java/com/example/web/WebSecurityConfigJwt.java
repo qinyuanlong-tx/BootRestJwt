@@ -13,9 +13,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
-import com.example.web.login.AuthenticationLoginFilter;
 import com.example.web.login.AuthenticationTokenFilter;
 import com.example.web.login.LoginService;
 import com.example.web.login.RestAuthenticationEntryPoint;
@@ -37,14 +35,6 @@ public class WebSecurityConfigJwt extends WebSecurityConfigurerAdapter {
 	public AuthenticationManager authenticationManagerBean() throws Exception {
 		return super.authenticationManagerBean();
 	}
-
-//	@Bean
-//	public AuthenticationLoginFilter authenticationLoginFilterBean() throws Exception {
-//		AuthenticationLoginFilter authenticationLoginFilter = new AuthenticationLoginFilter();
-//		authenticationLoginFilter.setAuthenticationManager(this.authenticationManagerBean());
-//		authenticationLoginFilter.setRequiresAuthenticationRequestMatcher(new AntPathRequestMatcher("/auth","POST"));
-//		return authenticationLoginFilter;
-//	}
 
 	@Bean
 	public AuthenticationTokenFilter authenticationTokenFilterBean() throws Exception {
@@ -70,7 +60,6 @@ public class WebSecurityConfigJwt extends WebSecurityConfigurerAdapter {
 
 		http.portMapper().http(8080).mapsTo(8443);
 		
-//		http.addFilterBefore(authenticationLoginFilterBean(), UsernamePasswordAuthenticationFilter.class);	
 		http.addFilterBefore(authenticationTokenFilterBean(), UsernamePasswordAuthenticationFilter.class);	
 	}
 
