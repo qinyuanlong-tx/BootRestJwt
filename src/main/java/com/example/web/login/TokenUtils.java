@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import com.example.web.domain.user.SecurityUserVo;
+import com.example.web.domain.user.UserVo;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -39,6 +40,17 @@ public class TokenUtils {
 			username = null;
 		}
 		return username;
+	}
+	
+	public String getAuthoritiesFromToken(String token) {
+		String authorities;
+		try {
+			final Claims claims = this.getClaimsFromToken(token);
+			authorities = (String)claims.get("authorities");
+		} catch (Exception e) {
+			authorities = null;
+		}
+		return authorities;
 	}
 
 	public Date getCreatedDateFromToken(String token) {
@@ -103,12 +115,14 @@ public class TokenUtils {
 
 	private String generateAudience(Device device) {
 		String audience = this.AUDIENCE_UNKNOWN;
-		if (device.isNormal()) {
-			audience = this.AUDIENCE_WEB;
-		} else if (device.isTablet()) {
-			audience = AUDIENCE_TABLET;
-		} else if (device.isMobile()) {
-			audience = AUDIENCE_MOBILE;
+		if (device != null) {
+			if (device.isNormal()) {
+				audience = this.AUDIENCE_WEB;
+			} else if (device.isTablet()) {
+				audience = AUDIENCE_TABLET;
+			} else if (device.isMobile()) {
+				audience = AUDIENCE_MOBILE;
+			}
 		}
 		return audience;
 	}
@@ -118,9 +132,10 @@ public class TokenUtils {
 		return (this.AUDIENCE_TABLET.equals(audience) || this.AUDIENCE_MOBILE.equals(audience));
 	}
 
-	public String generateToken(UserDetails userDetails, Device device) {
+	public String generateToken(UserVo loginUser, Device device) {
 		Map<String, Object> claims = new HashMap<String, Object>();
-		claims.put("sub", userDetails.getUsername());
+		claims.put("sub", loginUser.getUserId());
+		claims.put("authorities", loginUser.getAuthorities());
 		claims.put("audience", this.generateAudience(device));
 		claims.put("created", this.generateCurrentDate());
 		return this.generateToken(claims);
@@ -130,7 +145,7 @@ public class TokenUtils {
 		return Jwts.builder()
 					.setClaims(claims)
 					.setExpiration(this.generateExpirationDate())
-//					.compressWith(CompressionCodecs.DEFLATE)
+					.compressWith(CompressionCodecs.DEFLATE)
 					.signWith(SignatureAlgorithm.HS512, this.secret)
 					.compact();
 	}
@@ -153,10 +168,11 @@ public class TokenUtils {
 		return refreshedToken;
 	}
 
-	  public Boolean validateToken(String token, UserDetails userDetails) {
-		    SecurityUserVo user = (SecurityUserVo) userDetails;
+	  public Boolean validateToken(String token, UserVo currentUser) {
+//		    SecurityUserVo user = (SecurityUserVo) userDetails;
 		    final String username = this.getUsernameFromToken(token);
 		    final Date created = this.getCreatedDateFromToken(token);
-		    return (username.equals(user.getUsername()) && !(this.isTokenExpired(token)) && !(this.isCreatedBeforeLastPasswordReset(created, user.getLastPasswordReset())));
+//		    return (username.equals(currentUser.getUserId()) && !(this.isTokenExpired(token)) && !(this.isCreatedBeforeLastPasswordReset(created, user.getLastPasswordReset())));
+		    return (username.equals(currentUser.getUserId()) && !(this.isTokenExpired(token)));
 		  }
 }

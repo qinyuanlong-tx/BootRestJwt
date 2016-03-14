@@ -7,17 +7,19 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import javax.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+
+import com.example.web.domain.user.UserVo;
 
 public class AuthenticationTokenFilter extends UsernamePasswordAuthenticationFilter {
 
@@ -29,26 +31,57 @@ public class AuthenticationTokenFilter extends UsernamePasswordAuthenticationFil
 	@Autowired
 	private TokenUtils tokenUtils;
 
-	@Autowired
-	private LoginService loginService;
+//	@Override
+//	public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
+//			throws IOException, ServletException {
+//
+//		HttpServletRequest httpRequest = (HttpServletRequest) req;
+//		HttpServletResponse httpResponse = (HttpServletResponse) res;
+//		String authToken = httpRequest.getHeader(tokenHeader);
+//		String username = tokenUtils.getUsernameFromToken(authToken);
+//
+//		logger.debug("username " + username);
+//		logger.debug("SecurityContextHolder.getContext().getAuthentication() is NULL " + 
+//				(SecurityContextHolder.getContext().getAuthentication() == null));
+//		
+//		if (username != null) {
+//			String commaSprAuthorities = tokenUtils.getAuthoritiesFromToken(authToken);
+//			logger.debug("commaSprAuthorities " + commaSprAuthorities);
+//
+//			UserVo currentUser = new UserVo(username,commaSprAuthorities);
+//			if (tokenUtils.validateToken(authToken, currentUser)) {
+//				UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+//						username, null, AuthorityUtils.commaSeparatedStringToAuthorityList(commaSprAuthorities));
+//				authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(httpRequest));
+//				SecurityContextHolder.getContext().setAuthentication(authentication);
+//			}
+//		}
+//		chain.doFilter(httpRequest, httpResponse);
+//	}
+
 
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
 			throws IOException, ServletException {
 
 		HttpServletRequest httpRequest = (HttpServletRequest) request;
-		String authToken = httpRequest.getHeader(this.tokenHeader);
-		String username = this.tokenUtils.getUsernameFromToken(authToken);
+		HttpServletResponse httpResponse = (HttpServletResponse) response;
+		String authToken = httpRequest.getHeader(tokenHeader);
+		String username = tokenUtils.getUsernameFromToken(authToken);
 
-		if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-			UserDetails userDetails = this.loginService.loadUserByUsername(username);
-			if (this.tokenUtils.validateToken(authToken, userDetails)) {
+		logger.debug("SecurityContextHolder.getContext().getAuthentication() is NULL " + 
+				(SecurityContextHolder.getContext().getAuthentication() == null));
+		
+		if (username != null) {
+			String commaSprAuthorities = tokenUtils.getAuthoritiesFromToken(authToken);
+			UserVo currentUser = new UserVo(username,commaSprAuthorities);
+			if (tokenUtils.validateToken(authToken, currentUser)) {
 				UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-						userDetails, null, userDetails.getAuthorities());
+						username, null, AuthorityUtils.commaSeparatedStringToAuthorityList(commaSprAuthorities));
 				authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(httpRequest));
 				SecurityContextHolder.getContext().setAuthentication(authentication);
 			}
 		}
-		chain.doFilter(request, response);
+		chain.doFilter(httpRequest, httpResponse);
 	}
 }

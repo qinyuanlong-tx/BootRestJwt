@@ -1,7 +1,10 @@
 package com.example.web.login;
 
+import java.util.Collection;
+
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,6 +14,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.web.domain.jason.AuthenticationRequest;
 import com.example.web.domain.jason.AuthenticationResponse;
 import com.example.web.domain.user.SecurityUserVo;
+import com.example.web.domain.user.UserVo;
 
 @RestController
 public class AuthenticationController {
@@ -44,15 +49,17 @@ public class AuthenticationController {
 			Device device) throws AuthenticationException {
 		
 		// Perform the authentication
-		Authentication authentication = this.authenticationManagerBean.authenticate(new UsernamePasswordAuthenticationToken(
-				authenticationRequest.getUsername(), authenticationRequest.getPassword()));
-		SecurityContextHolder.getContext().setAuthentication(authentication);
+		Authentication requestAuth = new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(), authenticationRequest.getPassword());
+		Authentication resultAuth = authenticationManagerBean.authenticate(requestAuth);
+		SecurityContextHolder.getContext().setAuthentication(resultAuth);
 
-		// Reload password post-authentication so we can generate token
-		UserDetails userDetails = this.loginService.loadUserByUsername(authenticationRequest.getUsername());
-		String token = this.tokenUtils.generateToken(userDetails, device);
+		// generate Token (User ID, Authorities, Device Type, Created Date)
+		@SuppressWarnings("unchecked")
+		Collection<GrantedAuthority> authorities = (Collection<GrantedAuthority>)resultAuth.getAuthorities();
+		String commaSprAuthorities = StringUtils.join(authorities, ',');
+		UserVo loginUser = new UserVo(resultAuth.getName(),commaSprAuthorities);
+		String token = this.tokenUtils.generateToken(loginUser, device);
 
-		// Return the token
 		return ResponseEntity.ok(new AuthenticationResponse(token));
 	}
 

@@ -16,6 +16,15 @@ public class UserVo extends CommonVo {
 	private String passWd;
 	private String authorities;
 
+	public UserVo() {
+		super();
+	}
+	
+	public UserVo(String userId,String authorities) {
+		this.userId = userId;
+		this.authorities = authorities;
+	}
+	
 	public String getUserId() {
 		return userId;
 	}
