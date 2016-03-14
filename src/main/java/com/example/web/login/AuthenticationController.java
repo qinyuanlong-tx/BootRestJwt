@@ -30,8 +30,6 @@ import com.example.web.domain.user.UserVo;
 @RestController
 public class AuthenticationController {
 
-	private final Logger logger = Logger.getLogger(this.getClass());
-
 	@Value("${jwt.token.header}")
 	private String tokenHeader;
 
