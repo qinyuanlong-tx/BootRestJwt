@@ -1,6 +1,7 @@
 package com.example.web.domain.factory;
 
 import org.springframework.security.core.authority.AuthorityUtils;
+
 import com.example.web.domain.user.SecurityUserVo;
 import com.example.web.domain.user.UserVo;
 

@@ -1,12 +1,14 @@
 package com.example.web.login;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mobile.device.Device;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.stereotype.Component;
 
 import com.example.web.domain.user.SecurityUserVo;
@@ -24,6 +26,8 @@ public class TokenUtils {
 	private final String AUDIENCE_WEB = "web";
 	private final String AUDIENCE_MOBILE = "mobile";
 	private final String AUDIENCE_TABLET = "tablet";
+	
+	private final String ORIGIN_LOCAL = "local";
 
 	@Value("${jwt.token.secret}")
 	private String secret;
@@ -31,6 +35,9 @@ public class TokenUtils {
 	@Value("${jwt.token.expiration}")
 	private Long expiration;
 
+	@Value("${jwt.token.origin}")
+	private String origin;
+	
 	public String getUsernameFromToken(String token) {
 		String username;
 		try {
@@ -51,6 +58,17 @@ public class TokenUtils {
 			authorities = null;
 		}
 		return authorities;
+	}
+
+	public String getOriginFromToken(String token) {
+		String origin;
+		try {
+			final Claims claims = this.getClaimsFromToken(token);
+			origin = (String)claims.get("origin");
+		} catch (Exception e) {
+			origin = null;
+		}
+		return origin;
 	}
 
 	public Date getCreatedDateFromToken(String token) {
@@ -109,19 +127,15 @@ public class TokenUtils {
 		return expiration.before(this.generateCurrentDate());
 	}
 
-	private Boolean isCreatedBeforeLastPasswordReset(Date created, Date lastPasswordReset) {
-		return (lastPasswordReset != null && created.before(lastPasswordReset));
-	}
-
 	private String generateAudience(Device device) {
 		String audience = this.AUDIENCE_UNKNOWN;
 		if (device != null) {
 			if (device.isNormal()) {
 				audience = this.AUDIENCE_WEB;
 			} else if (device.isTablet()) {
-				audience = AUDIENCE_TABLET;
+				audience = this.AUDIENCE_TABLET;
 			} else if (device.isMobile()) {
-				audience = AUDIENCE_MOBILE;
+				audience = this.AUDIENCE_MOBILE;
 			}
 		}
 		return audience;
@@ -137,6 +151,7 @@ public class TokenUtils {
 		claims.put("sub", loginUser.getUserId());
 		claims.put("authorities", loginUser.getAuthorities());
 		claims.put("audience", this.generateAudience(device));
+		claims.put("origin", this.origin);
 		claims.put("created", this.generateCurrentDate());
 		return this.generateToken(claims);
 	}
@@ -150,10 +165,8 @@ public class TokenUtils {
 					.compact();
 	}
 
-	public Boolean canTokenBeRefreshed(String token, Date lastPasswordReset) {
-		final Date created = this.getCreatedDateFromToken(token);
-		return (!(this.isCreatedBeforeLastPasswordReset(created, lastPasswordReset))
-				&& (!(this.isTokenExpired(token)) || this.ignoreTokenExpiration(token)));
+	public Boolean canTokenBeRefreshed(String token) {
+		return (!(this.isTokenExpired(token)) || this.ignoreTokenExpiration(token));
 	}
 
 	public String refreshToken(String token) {
@@ -168,11 +181,21 @@ public class TokenUtils {
 		return refreshedToken;
 	}
 
-	  public Boolean validateToken(String token, UserVo currentUser) {
-//		    SecurityUserVo user = (SecurityUserVo) userDetails;
-		    final String username = this.getUsernameFromToken(token);
-		    final Date created = this.getCreatedDateFromToken(token);
-//		    return (username.equals(currentUser.getUserId()) && !(this.isTokenExpired(token)) && !(this.isCreatedBeforeLastPasswordReset(created, user.getLastPasswordReset())));
-		    return (username.equals(currentUser.getUserId()) && !(this.isTokenExpired(token)));
-		  }
+	public Boolean validateToken(String token, SecurityUserVo userDetails) {
+		
+		boolean isValid = false;
+		
+		final String username = this.getUsernameFromToken(token);
+		final String orgin = this.getOriginFromToken(token);
+		String commaSprAuthorities = this.getAuthoritiesFromToken(token);
+		Collection<GrantedAuthority> authorities = AuthorityUtils.commaSeparatedStringToAuthorityList(commaSprAuthorities);
+		if (ORIGIN_LOCAL.equals(orgin)) {
+			if (userDetails != null && username.equals(userDetails.getUsername()) && !this.isTokenExpired(token)
+					&& authorities != null && userDetails != null && userDetails.getAuthorities() != null 
+					&& authorities.containsAll(userDetails.getAuthorities())) isValid = true;
+		} else {
+			if (!this.isTokenExpired(token)) isValid = true;
+		}
+		return isValid;
+	}
 }

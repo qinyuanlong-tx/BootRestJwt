@@ -14,8 +14,6 @@ public class SecurityUserVo extends org.springframework.security.core.userdetail
 	private static boolean credentialsNonExpired = true;
 	private static boolean accountNonLocked = true;
 	
-	private Date lastPasswordReset;
-
 	public SecurityUserVo(String username, String password, boolean enabled, boolean accountNonExpired,
 			boolean credentialsNonExpired, boolean accountNonLocked,
 			Collection<? extends GrantedAuthority> authorities) {
@@ -24,13 +22,5 @@ public class SecurityUserVo extends org.springframework.security.core.userdetail
 
 	public SecurityUserVo(String username, String password, Collection<? extends GrantedAuthority> authorities) {
 		this(username, password, enabled, accountNonExpired, credentialsNonExpired, accountNonLocked, authorities);
-	}
-
-	public Date getLastPasswordReset() {
-		return lastPasswordReset;
-	}
-
-	public void setLastPasswordReset(Date lastPasswordReset) {
-		this.lastPasswordReset = lastPasswordReset;
 	}
 }

@@ -19,17 +19,22 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 
-import com.example.web.domain.user.UserVo;
+import com.example.web.domain.user.SecurityUserVo;
 
 public class AuthenticationTokenFilter extends UsernamePasswordAuthenticationFilter {
 
 	private static final Logger logger = LoggerFactory.getLogger(AuthenticationTokenFilter.class);
 
+	private final String ORIGIN_LOCAL = "local";
+	
 	@Value("${jwt.token.header}")
 	private String tokenHeader;
 
 	@Autowired
 	private TokenUtils tokenUtils;
+
+	@Autowired
+    private LoginService loginService;
 
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
@@ -39,14 +44,13 @@ public class AuthenticationTokenFilter extends UsernamePasswordAuthenticationFil
 		HttpServletResponse httpResponse = (HttpServletResponse) response;
 		String authToken = httpRequest.getHeader(tokenHeader);
 		String username = tokenUtils.getUsernameFromToken(authToken);
-
-		logger.debug("SecurityContextHolder.getContext().getAuthentication() is NULL " + 
-				(SecurityContextHolder.getContext().getAuthentication() == null));
 		
 		if (username != null) {
-			String commaSprAuthorities = tokenUtils.getAuthoritiesFromToken(authToken);
-			UserVo currentUser = new UserVo(username,commaSprAuthorities);
+			String orgin = tokenUtils.getOriginFromToken(authToken);
+			SecurityUserVo currentUser = null;
+			if (ORIGIN_LOCAL.equals(orgin)) currentUser = (SecurityUserVo)loginService.loadUserByUsername(username);
 			if (tokenUtils.validateToken(authToken, currentUser)) {
+				String commaSprAuthorities = tokenUtils.getAuthoritiesFromToken(authToken);
 				UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
 						username, null, AuthorityUtils.commaSeparatedStringToAuthorityList(commaSprAuthorities));
 				authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(httpRequest));

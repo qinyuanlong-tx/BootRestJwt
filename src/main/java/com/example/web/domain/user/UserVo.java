@@ -1,10 +1,7 @@
 package com.example.web.domain.user;
 
-import java.util.Date;
-
 import com.example.web.domain.common.CommonVo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
 
 //@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties({ "passWd" })

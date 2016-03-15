@@ -5,7 +5,6 @@ import java.util.Collection;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +15,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -24,7 +22,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.web.domain.jason.AuthenticationRequest;
 import com.example.web.domain.jason.AuthenticationResponse;
-import com.example.web.domain.user.SecurityUserVo;
 import com.example.web.domain.user.UserVo;
 
 @RestController
@@ -38,9 +35,6 @@ public class AuthenticationController {
 
 	@Autowired
 	private TokenUtils tokenUtils;
-
-	@Autowired
-	private LoginService loginService;
 
 	@RequestMapping(value = "/auth", method = RequestMethod.POST)
 	public ResponseEntity<?> authenticationRequest(@RequestBody AuthenticationRequest authenticationRequest,
@@ -63,10 +57,11 @@ public class AuthenticationController {
 
 	@RequestMapping(value = "/auth/refresh", method = RequestMethod.GET)
 	public ResponseEntity<?> authenticationRequest(HttpServletRequest request) {
+		
 		String token = request.getHeader(this.tokenHeader);
 		String username = this.tokenUtils.getUsernameFromToken(token);
-		SecurityUserVo user = (SecurityUserVo) this.loginService.loadUserByUsername(username);
-		if (this.tokenUtils.canTokenBeRefreshed(token, user.getLastPasswordReset())) {
+		
+		if (username != null && this.tokenUtils.canTokenBeRefreshed(token)) {
 			String refreshedToken = this.tokenUtils.refreshToken(token);
 			return ResponseEntity.ok(new AuthenticationResponse(refreshedToken));
 		} else {
