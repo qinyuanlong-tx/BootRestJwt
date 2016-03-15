@@ -185,11 +185,12 @@ public class TokenUtils {
 		
 		boolean isValid = false;
 		
-		final String username = this.getUsernameFromToken(token);
 		final String orgin = this.getOriginFromToken(token);
-		String commaSprAuthorities = this.getAuthoritiesFromToken(token);
-		Collection<GrantedAuthority> authorities = AuthorityUtils.commaSeparatedStringToAuthorityList(commaSprAuthorities);
+
 		if (ORIGIN_LOCAL.equals(orgin)) {
+			final String username = this.getUsernameFromToken(token);
+			String commaSprAuthorities = this.getAuthoritiesFromToken(token);
+			Collection<GrantedAuthority> authorities = AuthorityUtils.commaSeparatedStringToAuthorityList(commaSprAuthorities);
 			if (userDetails != null && username.equals(userDetails.getUsername()) && !this.isTokenExpired(token)
 					&& authorities != null && userDetails != null && userDetails.getAuthorities() != null 
 					&& authorities.containsAll(userDetails.getAuthorities())) isValid = true;
