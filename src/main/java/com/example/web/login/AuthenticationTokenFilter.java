@@ -45,6 +45,8 @@ public class AuthenticationTokenFilter extends UsernamePasswordAuthenticationFil
 		String authToken = httpRequest.getHeader(tokenHeader);
 		String username = tokenUtils.getUsernameFromToken(authToken);
 		
+		logger.debug("Created: " + tokenUtils.getCreatedDateFromToken(authToken) +
+				"    Expiration: " + tokenUtils.getExpirationDateFromToken(authToken));
 		if (username != null) {
 			String orgin = tokenUtils.getOriginFromToken(authToken);
 			SecurityUserVo currentUser = null;
